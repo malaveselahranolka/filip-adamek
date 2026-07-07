@@ -225,7 +225,7 @@
   .screen-museo .m-search{position:absolute;top:.95rem;left:50%;transform:translateX(-50%);width:46%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#CFC6F5;border-radius:99px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.12em;padding:.32rem .9rem;text-transform:uppercase}
 
   /* ---------- lab ---------- */
-  .lab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:3.5rem}
+  .lab-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:3.5rem;perspective:1100px}
   @media (max-width:960px){.lab-grid{grid-template-columns:1fr}}
   .lab-tile{background:#F8F5EF;border:1px solid rgba(22,20,18,.14);border-radius:18px;padding:1.6rem;min-height:340px;display:flex;flex-direction:column;position:relative;overflow:hidden;
     box-shadow:0 2px 6px rgba(14,47,214,.05),0 18px 40px -18px rgba(14,47,214,.14);
@@ -260,7 +260,7 @@
   @keyframes spin{to{transform:rotate(1turn)}}
 
   /* ---------- atelier parallax collage ---------- */
-  .px-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1rem,2.5vw,2rem);margin-top:clamp(3rem,6vw,5rem);align-items:start}
+  .px-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(1rem,2.5vw,2rem);margin-top:clamp(3rem,6vw,5rem);align-items:start;perspective:1100px}
   .px:nth-child(2){margin-top:5rem}
   .px:nth-child(3){margin-top:2.2rem}
   .px:nth-child(5){margin-top:3rem}
@@ -477,8 +477,8 @@
 
 <section class="section on-bone" id="lab" data-bg="#EDE9E0">
   <div class="wrap">
-    <span class="eyebrow reveal">Lab — hřiště</span>
-    <h2 class="display statement reveal">Co dnes web umí? Sáhni si.</h2>
+    <span class="eyebrow">Lab — hřiště</span>
+    <h2 class="display statement">Co dnes web umí? Sáhni si.</h2>
     <div class="lab-grid">
       <div class="lab-tile">
         <h3>01 · Variabilní typografie</h3>
@@ -509,8 +509,8 @@
 
 <section class="section on-bone" id="atelier" data-bg="#EDE9E0">
   <div class="wrap">
-    <span class="eyebrow reveal">Z ateliéru — mimo zakázky</span>
-    <h2 class="display statement reveal">Hraju si, i když se nikdo nedívá.</h2>
+    <span class="eyebrow">Z ateliéru — mimo zakázky</span>
+    <h2 class="display statement">Hraju si, i když se nikdo nedívá.</h2>
     <div class="px-grid">
       <div class="px" data-speed=".9"><div class="poster poster-a" style="--tilt:-2deg"><span class="p-big">Aa</span><span class="p-cap">Typo studie 01</span></div></div>
       <div class="px" data-speed="1.5"><div class="poster poster-b" style="--tilt:1.5deg"><span class="p-big">VOLTA&nbsp;25</span><span class="p-cap">Plakát — generativ</span></div></div>
@@ -839,17 +839,38 @@
       scrollTrigger:{trigger:'#atelier',start:'top bottom',end:'bottom top',scrub:true}});
   });
 
-  /* lab: tiles fly in as you arrive, fly away as you leave (scroll-linked) */
+  /* cinematic camera: lab flies in from depth, exits PAST the camera */
   const labTiles=gsap.utils.toArray('.lab-tile');
   if(labTiles.length){
+    gsap.fromTo('#lab .eyebrow, #lab .statement',{y:90,opacity:0},
+      {y:0,opacity:1,stagger:.08,ease:'power2.out',
+       scrollTrigger:{trigger:'#lab',start:'top 96%',end:'top 45%',scrub:1}});
     gsap.fromTo(labTiles,
-      {y:150,opacity:0,rotation:i=>(i-1)*7},
-      {y:0,opacity:1,rotation:0,stagger:.14,ease:'none',
-       scrollTrigger:{trigger:'#lab',start:'top 88%',end:'top 30%',scrub:true}});
+      {y:340,z:-520,rotationX:38,scale:.8,opacity:0,transformOrigin:'50% 100%'},
+      {y:0,z:0,rotationX:0,scale:1,opacity:1,stagger:.16,ease:'power2.out',
+       scrollTrigger:{trigger:'#lab',start:'top 92%',end:'top 20%',scrub:1}});
+    gsap.to('#lab .eyebrow, #lab .statement',
+      {y:-140,opacity:0,stagger:.06,ease:'power2.in',immediateRender:false,
+       scrollTrigger:{trigger:'#lab',start:'bottom 52%',end:'bottom 12%',scrub:1}});
     gsap.to(labTiles,
-      {y:-160,opacity:0,rotation:i=>(1-i)*6,stagger:.12,ease:'none',immediateRender:false,
-       scrollTrigger:{trigger:'#lab',start:'bottom 55%',end:'bottom 8%',scrub:true}});
+      {y:-240,z:460,rotationX:-16,scale:1.08,opacity:0,stagger:.13,ease:'power2.in',immediateRender:false,
+       scrollTrigger:{trigger:'#lab',start:'bottom 56%',end:'bottom 5%',scrub:1}});
   }
+
+  /* cinematic camera: atelier posters rise from depth, exit toward viewer */
+  gsap.fromTo('#atelier .eyebrow, #atelier .statement',{y:90,opacity:0},
+    {y:0,opacity:1,stagger:.08,ease:'power2.out',
+     scrollTrigger:{trigger:'#atelier',start:'top 96%',end:'top 45%',scrub:1}});
+  gsap.fromTo('.px',
+    {z:-420,rotationX:26,scale:.84,opacity:0,transformOrigin:'50% 100%'},
+    {z:0,rotationX:0,scale:1,opacity:1,stagger:.1,ease:'power2.out',
+     scrollTrigger:{trigger:'#atelier',start:'top 88%',end:'top 16%',scrub:1}});
+  gsap.to('#atelier .eyebrow, #atelier .statement',
+    {y:-140,opacity:0,stagger:.06,ease:'power2.in',immediateRender:false,
+     scrollTrigger:{trigger:'#atelier',start:'bottom 45%',end:'bottom 8%',scrub:1}});
+  gsap.to('.px',
+    {z:380,opacity:0,scale:1.06,rotationX:-12,stagger:.08,ease:'power2.in',immediateRender:false,
+     scrollTrigger:{trigger:'#atelier',start:'bottom 48%',end:'bottom 3%',scrub:1}});
 
   /* bridge: dashed line draws itself down to contact, CTA lights up at the end */
   const pill=document.getElementById('ctaPill');
