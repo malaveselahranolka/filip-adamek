@@ -56,7 +56,7 @@
   a{color:inherit}
 
   /* ---------- layers ---------- */
-  .bg-layer{position:fixed;inset:0;z-index:-1;background:var(--klein)}
+  .bg-layer{position:fixed;inset:0;z-index:-1;background:var(--klein);will-change:background-color;transform:translateZ(0)}
   .grain{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.055;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
   }
@@ -568,13 +568,13 @@
     hero.prepend(cvs);
     const ctx=cvs.getContext('2d');
     const CHARS='FILIPADMEK✺*+{}[]()<>/\\|;:~=·°';
-    const CW=15,CH=18;
+    const CW=16,CH=19;
     let cols=0,rows=0,cells=[],dpr=1;
     const rnd=n=>Math.floor(Math.random()*n);
     function drawCell(i,alpha){
       const c=cells[i];
       ctx.clearRect(c.x*CW,c.y*CH,CW,CH);
-      ctx.fillStyle=c.acc?'rgba(143,163,255,'+(alpha??c.a)*1.6+')':'rgba(255,255,255,'+(alpha??c.a)+')';
+      ctx.fillStyle=c.acc?'rgba(150,170,255,'+Math.min((alpha??c.a)*1.7,1)+')':'rgba(226,232,255,'+(alpha??c.a)+')';
       ctx.fillText(c.ch,c.x*CW+CW/2,c.y*CH+CH/2);
     }
     function init(){
@@ -583,12 +583,12 @@
       cvs.width=w*dpr;cvs.height=h*dpr;
       cvs.style.width=w+'px';cvs.style.height=h+'px';
       ctx.setTransform(dpr,0,0,dpr,0,0);
-      ctx.font='12px "Space Mono",monospace';
+      ctx.font='13px "Space Mono",monospace';
       ctx.textAlign='center';ctx.textBaseline='middle';
       cols=Math.ceil(w/CW);rows=Math.ceil(h/CH);
       cells=[];
       for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-        cells.push({x,y,ch:CHARS[rnd(CHARS.length)],a:.028+Math.random()*.038,acc:Math.random()<.045});
+        cells.push({x,y,ch:CHARS[rnd(CHARS.length)],a:.07+Math.random()*.075,acc:Math.random()<.07});
       }
       ctx.clearRect(0,0,w,h);
       cells.forEach((_,i)=>drawCell(i));
@@ -597,17 +597,18 @@
     window.addEventListener('resize',init);
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(init);
     if(!reduced){
-      let amx=-1e4,amy=-1e4,lit=[];
+      let amx=-1e4,amy=-1e4,lit=[],raf=null,visible=true;
       hero.addEventListener('pointermove',e=>{
         const r=cvs.getBoundingClientRect();
         amx=e.clientX-r.left;amy=e.clientY-r.top;
       },{passive:true});
+      hero.addEventListener('pointerleave',()=>{amx=-1e4;amy=-1e4;});
       let last=0;
       const loop=(t)=>{
-        if(window.scrollY<window.innerHeight && t-last>110){
+        if(t-last>90){
           last=t;
-          /* flicker: mutate ~1.5% cells */
-          for(let k=0;k<cells.length*.015;k++){
+          /* flicker: mutate ~2% cells */
+          for(let k=0;k<cells.length*.02;k++){
             const i=rnd(cells.length);
             cells[i].ch=CHARS[rnd(CHARS.length)];
             drawCell(i);
@@ -616,20 +617,25 @@
           lit.forEach(i=>drawCell(i));
           lit=[];
           if(amx>-9999){
-            const cx=Math.round(amx/CW),cy=Math.round(amy/CH),R=9;
+            const cx=Math.round(amx/CW),cy=Math.round(amy/CH),R=11;
             for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){
               if(x<0||y<0||x>=cols||y>=rows)continue;
               const d=Math.hypot((x-cx)*CW,(y-cy)*CH);
               if(d>R*CW)continue;
               const i=y*cols+x;
-              drawCell(i,.04+(1-d/(R*CW))*.22);
+              drawCell(i,.10+(1-d/(R*CW))*.55);
               lit.push(i);
             }
           }
         }
-        requestAnimationFrame(loop);
+        raf=visible?requestAnimationFrame(loop):null;
       };
-      requestAnimationFrame(loop);
+      /* only run the loop while the hero is on screen -> zero cost after scroll */
+      new IntersectionObserver(es=>{
+        visible=es[0].isIntersecting;
+        if(visible && !raf) raf=requestAnimationFrame(loop);
+      },{threshold:0}).observe(hero);
+      raf=requestAnimationFrame(loop);
     }
   })();
 
