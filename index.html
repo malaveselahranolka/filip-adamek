@@ -290,6 +290,25 @@
   .poster-f .p-big{color:var(--ink);font-size:clamp(1.15rem,2vw,1.7rem);line-height:1.15;top:1rem;left:1rem;right:1rem;letter-spacing:-.01em}
   .poster-f .p-cap{color:var(--ink)}
 
+  /* ---------- bridge: dashed line to contact ---------- */
+  .bridge{display:flex;flex-direction:column;align-items:center}
+  .center-block{text-align:center;margin-left:auto;margin-right:auto}
+  .bridge .statement{max-width:14em;margin-bottom:.6rem}
+  .bridge-line{width:min(720px,86vw);margin:0 auto;color:var(--ink)}
+  .bridge-line svg{width:100%;height:auto;display:block}
+  .bridge-mask{stroke-dasharray:1000}
+  .bridge-dot{opacity:.85}
+  .bridge-cta-row{margin-top:-1.2rem;display:flex;justify-content:center}
+  .cta-pill{display:inline-flex;align-items:center;gap:.6em;font-family:var(--font-display);font-weight:700;
+    font-size:clamp(1.05rem,2vw,1.5rem);text-transform:uppercase;letter-spacing:.02em;text-decoration:none;
+    border:2px solid var(--ink);border-radius:99px;padding:1rem 2.4rem;color:var(--ink);background:transparent;
+    transition:background-color .45s,color .45s,border-color .45s,box-shadow .45s,transform .5s cubic-bezier(.34,1.56,.64,1)}
+  .cta-pill span{font-size:.8em}
+  .cta-pill.lit{background:var(--klein);color:var(--bone);border-color:var(--klein);transform:scale(1.07);
+    box-shadow:0 6px 18px -4px rgba(14,47,214,.4),0 26px 80px -12px rgba(14,47,214,.55)}
+  .cta-pill.lit span{animation:spin 6s linear infinite}
+  .cta-pill:hover,.cta-pill:focus-visible{background:var(--ink);color:var(--bone);border-color:var(--ink);transform:scale(1.04)}
+
   /* ---------- custom cursor ---------- */
   .cursor{position:fixed;top:0;left:0;width:44px;height:44px;border-radius:50%;background:#fff;
     mix-blend-mode:difference;pointer-events:none;z-index:70;will-change:transform}
@@ -456,6 +475,38 @@
   </div>
 </section>
 
+<section class="section on-bone" id="lab" data-bg="#EDE9E0">
+  <div class="wrap">
+    <span class="eyebrow reveal">Lab — hřiště</span>
+    <h2 class="display statement reveal">Co dnes web umí? Sáhni si.</h2>
+    <div class="lab-grid">
+      <div class="lab-tile">
+        <h3>01 · Variabilní typografie</h3>
+        <div class="lab-stage"><div class="lab-glyph" id="glyph">Aa</div></div>
+        <label class="lab-foot" for="wght">Váha fontu — táhni<br>
+          <input type="range" id="wght" min="200" max="900" value="500" step="1">
+        </label>
+      </div>
+      <div class="lab-tile">
+        <h3>02 · Živá paleta</h3>
+        <button class="swatch-btn" id="swatch" aria-label="Přepnout barevnou paletu">
+          <span class="swatch-word">KLIK</span>
+          <span class="swatch-dots"><i></i><i></i><i></i></span>
+        </button>
+        <p class="lab-foot">Barva je rozhodnutí, ne dekorace</p>
+      </div>
+      <div class="lab-tile">
+        <h3>03 · Fyzika pohybu</h3>
+        <div class="blob-stage" id="blobStage">
+          <div class="blob" id="blob"></div>
+          <div class="blob2" id="blob2"></div>
+        </div>
+        <p class="lab-foot">Pohyb s pružinou, ne s pravítkem</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section on-bone" id="atelier" data-bg="#EDE9E0">
   <div class="wrap">
     <span class="eyebrow reveal">Z ateliéru — mimo zakázky</span>
@@ -471,34 +522,26 @@
   </div>
 </section>
 
-<section class="section on-bone" id="lab" data-bg="#EDE9E0">
-  <div class="wrap">
-    <span class="eyebrow reveal">Lab — hřiště</span>
-    <h2 class="display statement reveal">Co dnes web umí? Sáhni si.</h2>
-    <div class="lab-grid">
-      <div class="lab-tile reveal">
-        <h3>01 · Variabilní typografie</h3>
-        <div class="lab-stage"><div class="lab-glyph" id="glyph">Aa</div></div>
-        <label class="lab-foot" for="wght">Váha fontu — táhni<br>
-          <input type="range" id="wght" min="200" max="900" value="500" step="1">
-        </label>
-      </div>
-      <div class="lab-tile reveal">
-        <h3>02 · Živá paleta</h3>
-        <button class="swatch-btn" id="swatch" aria-label="Přepnout barevnou paletu">
-          <span class="swatch-word">KLIK</span>
-          <span class="swatch-dots"><i></i><i></i><i></i></span>
-        </button>
-        <p class="lab-foot">Barva je rozhodnutí, ne dekorace</p>
-      </div>
-      <div class="lab-tile reveal">
-        <h3>03 · Fyzika pohybu</h3>
-        <div class="blob-stage" id="blobStage">
-          <div class="blob" id="blob"></div>
-          <div class="blob2" id="blob2"></div>
-        </div>
-        <p class="lab-foot">Pohyb s pružinou, ne s pravítkem</p>
-      </div>
+<section class="section on-bone" id="most" data-bg="#EDE9E0">
+  <div class="wrap bridge">
+    <span class="eyebrow reveal center-block">Další krok</span>
+    <h2 class="display statement center-block reveal">Připraveni posunout svou&nbsp;značku?</h2>
+    <div class="bridge-line" aria-hidden="true">
+      <svg viewBox="0 0 1000 1300" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <mask id="lineMask" maskUnits="userSpaceOnUse">
+            <path class="bridge-mask" pathLength="1000" d="M500,10 C500,180 230,240 230,430 C230,620 770,620 770,830 C770,1030 500,1060 500,1280"
+              stroke="#fff" stroke-width="26" stroke-linecap="round"/>
+          </mask>
+        </defs>
+        <path class="bridge-dash" d="M500,10 C500,180 230,240 230,430 C230,620 770,620 770,830 C770,1030 500,1060 500,1280"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 14"
+          vector-effect="non-scaling-stroke" mask="url(#lineMask)"/>
+        <circle class="bridge-dot" cx="500" cy="10" r="7" fill="currentColor"/>
+      </svg>
+    </div>
+    <div class="bridge-cta-row">
+      <a class="cta-pill" id="ctaPill" href="#kontakt">Kontaktovat <span aria-hidden="true">✺</span></a>
     </div>
   </div>
 </section>
@@ -795,6 +838,26 @@
     gsap.fromTo(el,{y:()=>90*sp},{y:()=>-110*sp,ease:'none',
       scrollTrigger:{trigger:'#atelier',start:'top bottom',end:'bottom top',scrub:true}});
   });
+
+  /* lab: tiles fly in as you arrive, fly away as you leave (scroll-linked) */
+  const labTiles=gsap.utils.toArray('.lab-tile');
+  if(labTiles.length){
+    gsap.fromTo(labTiles,
+      {y:150,opacity:0,rotation:i=>(i-1)*7},
+      {y:0,opacity:1,rotation:0,stagger:.14,ease:'none',
+       scrollTrigger:{trigger:'#lab',start:'top 88%',end:'top 30%',scrub:true}});
+    gsap.to(labTiles,
+      {y:-160,opacity:0,rotation:i=>(1-i)*6,stagger:.12,ease:'none',immediateRender:false,
+       scrollTrigger:{trigger:'#lab',start:'bottom 55%',end:'bottom 8%',scrub:true}});
+  }
+
+  /* bridge: dashed line draws itself down to contact, CTA lights up at the end */
+  const pill=document.getElementById('ctaPill');
+  if(document.querySelector('.bridge-mask')){
+    gsap.fromTo('.bridge-mask',{strokeDashoffset:1000},{strokeDashoffset:0,ease:'none',
+      scrollTrigger:{trigger:'.bridge-line',start:'top 78%',end:'bottom 78%',scrub:true,
+        onUpdate:self=>{if(pill) pill.classList.toggle('lit',self.progress>.96)}}});
+  }
 
   /* footer ghost slide-in */
   gsap.fromTo('.footer-ghost',{xPercent:-5,opacity:0},{xPercent:0,opacity:1,ease:'none',
