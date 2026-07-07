@@ -642,6 +642,7 @@
   /* hero artifacts: mouse depth parallax */
   if(finePointer){
     const arts=gsap.utils.toArray('.art');
+    const inners=arts.map(a=>a.querySelector('.art-in'));
     const st2=arts.map(()=>({x:0,y:0}));
     let hx=0,hy=0,r2=null;
     const loop2=()=>{
@@ -650,7 +651,7 @@
         const d=parseFloat(a.dataset.depth||'10');
         const tx=hx*d,ty=hy*d,s=st2[i];
         s.x+=(tx-s.x)*.07; s.y+=(ty-s.y)*.07;
-        a.firstElementChild.style.transform=`translate(${s.x}px,${s.y}px)`;
+        inners[i].style.transform=`translate(${s.x}px,${s.y}px)`;
         if(Math.abs(tx-s.x)>.2||Math.abs(ty-s.y)>.2) alive=true;
       });
       r2=alive?requestAnimationFrame(loop2):null;
