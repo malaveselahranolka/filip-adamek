@@ -112,7 +112,18 @@
   .art--ring{bottom:40%;right:22%}
   .art--ring .art-in{width:clamp(120px,15vw,210px);aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(255,255,255,.38)}
   @media (max-width:700px){.art--ring,.art--pill{display:none}.art--card{top:11%;right:5%}.art--card .art-in{width:34vw}}
-  .k{display:inline-block;font-variation-settings:"wght" 800;will-change:font-variation-settings}
+  .k{display:inline-block;font-variation-settings:"wght" 800;will-change:font-variation-settings;text-align:center;contain:layout}
+
+  /* ---------- loader ---------- */
+  .loader{position:fixed;inset:0;z-index:95;background:var(--ink);color:var(--bone);
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:1.2rem var(--pad-x) 2.2rem;will-change:transform}
+  .loader-top{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+    font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+  .loader-num{align-self:flex-end;font-family:var(--font-display);font-weight:800;
+    font-size:clamp(4rem,14vw,10rem);line-height:1;font-variant-numeric:tabular-nums}
+  .loader-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(237,233,224,.18)}
+  .loader-bar i{display:block;height:100%;background:var(--klein);transform-origin:left;transform:scaleX(0)}
   .hero-sub{display:flex;flex-wrap:wrap;gap:2rem;align-items:flex-end;justify-content:space-between;border-top:1px solid rgba(255,255,255,.35);padding-top:1.6rem}
   .hero-sub p{margin:0;max-width:30em;font-size:clamp(1.05rem,1.6vw,1.3rem);line-height:1.55}
   .hero-meta{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;text-align:right;opacity:.8;line-height:2.1}
@@ -575,24 +586,46 @@
   const finePointer = window.matchMedia('(pointer: fine)').matches;
   if(!finePointer) document.body.classList.add('touch');
 
-  /* ---- kinetic hero: cursor proximity -> variable weight (only while moving) ---- */
+  /* ---- kinetic hero: cursor proximity -> variable weight (only while moving) ----
+     letters get FIXED widths (measured at wght 900) so weight changes repaint
+     the glyph only and never reflow the line -> no jank */
   const letters = Array.from(document.querySelectorAll('#kinetic .k'));
   if(finePointer && !reduced && letters.length){
     let mx=-1e4,my=-1e4,raf=null;
     let centers=[];
     const measure=()=>{centers=letters.map(el=>{const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}})};
-    measure();
-    window.addEventListener('resize',measure);
+    const lockWidths=()=>{
+      letters.forEach(el=>{el.style.width='auto';el.style.fontVariationSettings='"wght" 900'});
+      const ws=letters.map(el=>el.getBoundingClientRect().width);
+      letters.forEach((el,i)=>{el.style.width=(ws[i]+.5)+'px';el.style.fontVariationSettings='"wght" 800'});
+      measure();
+    };
+    lockWidths();
+    /* pre-rasterize all quantized weights while the loader still covers the hero */
+    const prewarm=()=>{
+      let w=200;
+      const step=()=>{
+        letters.forEach(el=>el.style.fontVariationSettings='"wght" '+w);
+        w+=40;
+        if(w<=880) requestAnimationFrame(step);
+        else letters.forEach(el=>el.style.fontVariationSettings='"wght" 800');
+      };
+      requestAnimationFrame(step);
+    };
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{lockWidths();prewarm();});
+    window.addEventListener('resize',lockWidths);
     window.addEventListener('scroll',measure,{passive:true});
-    const cur=letters.map(()=>800);
+    const cur=letters.map(()=>800),written=letters.map(()=>800);
     const tick=()=>{
       let alive=false;
       letters.forEach((el,i)=>{
         const d=Math.hypot(mx-centers[i].x,my-centers[i].y);
         const tgt=200+Math.min(d/340,1)*600;   /* close = thin, far = default 800 */
-        cur[i]+=(tgt-cur[i])*.12;
+        cur[i]+=(tgt-cur[i])*.14;
         if(Math.abs(tgt-cur[i])>.5) alive=true;
-        el.style.fontVariationSettings='"wght" '+cur[i].toFixed(1);
+        /* quantize to steps of 40: few weight variants -> glyphs come from cache, no re-raster */
+        const q=Math.round(cur[i]/40)*40;
+        if(q!==written[i]){written[i]=q;el.style.fontVariationSettings='"wght" '+q;}
       });
       raf=alive?requestAnimationFrame(tick):null;   /* stops when settled -> zero idle cost */
     };
@@ -648,7 +681,7 @@
       hero.addEventListener('pointerleave',()=>{amx=-1e4;amy=-1e4;});
       let last=0;
       const loop=(t)=>{
-        if(t-last>90){
+        if(t-last>110){
           last=t;
           /* flicker: mutate ~2% cells */
           for(let k=0;k<cells.length*.02;k++){
@@ -660,7 +693,7 @@
           lit.forEach(i=>drawCell(i));
           lit=[];
           if(amx>-9999){
-            const cx=Math.round(amx/CW),cy=Math.round(amy/CH),R=11;
+            const cx=Math.round(amx/CW),cy=Math.round(amy/CH),R=9;
             for(let y=cy-R;y<=cy+R;y++)for(let x=cx-R;x<=cx+R;x++){
               if(x<0||y<0||x>=cols||y>=rows)continue;
               const d=Math.hypot((x-cx)*CW,(y-cy)*CH);
@@ -745,13 +778,42 @@
     });
   }
 
-  /* intro: hero load sequence */
-  const intro=gsap.timeline({defaults:{ease:'power4.out'}});
+  /* loader: progress bar curtain, then hero intro */
+  const loader=document.createElement('div');
+  loader.className='loader';
+  loader.setAttribute('aria-hidden','true');
+  loader.innerHTML='<div class="loader-top"><span>Filip Adámek</span><span>Portfolio — ©2026</span></div>'+
+    '<div class="loader-num">0%</div>'+
+    '<div class="loader-bar"><i></i></div>';
+  document.body.appendChild(loader);
+  const loadNum=loader.querySelector('.loader-num'),loadFill=loader.querySelector('.loader-bar i');
+  if(window.__lenis) window.__lenis.stop();
+
+  /* intro: hero load sequence (played by the loader once assets are in) */
+  const intro=gsap.timeline({paused:true,defaults:{ease:'power4.out'}});
   intro.from('.hero-name .k',{yPercent:118,duration:1,stagger:.045},.15)
        .from('.hero-hint',{opacity:0,duration:.6},'-=.45')
        .from('.hero-sub',{y:36,opacity:0,duration:.9},'-=.6')
        .from('.art',{scale:0,rotation:-9,opacity:0,duration:.9,ease:'back.out(1.6)',stagger:.09},'-=.7')
        .from('.nav',{y:-14,opacity:0,duration:.6},'-=.85');
+
+  /* loader progress: warm up to 92 %, finish when page + fonts are in, lift curtain */
+  const prog={v:0};
+  const renderProg=()=>{loadNum.textContent=Math.round(prog.v)+'%';loadFill.style.transform='scaleX('+(prog.v/100)+')'};
+  const warmup=gsap.to(prog,{v:92,duration:1.5,ease:'power2.out',onUpdate:renderProg});
+  const whenLoaded=new Promise(res=>{document.readyState==='complete'?res():window.addEventListener('load',res,{once:true})});
+  const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+  Promise.all([whenLoaded,fontsReady,new Promise(r=>setTimeout(r,1300))]).then(()=>{
+    warmup.kill();
+    gsap.to(prog,{v:100,duration:.4,ease:'power1.in',onUpdate:renderProg,onComplete:()=>{
+      gsap.to(loader,{yPercent:-100,duration:.95,ease:'power4.inOut',delay:.15,onComplete:()=>loader.remove()});
+      gsap.delayedCall(.4,()=>{
+        intro.play();
+        if(window.__lenis) window.__lenis.start();
+        ScrollTrigger.refresh();
+      });
+    }});
+  });
 
   /* hero artifacts: scroll parallax (different speeds) */
   gsap.utils.toArray('.art').forEach(el=>{
